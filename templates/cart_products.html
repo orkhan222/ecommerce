@@ -1,0 +1,86 @@
+{%load static%}
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+        <data id="change_quantity_route" value="{%url 'change_quantity' id="_id_" qyt="_qyt_"%}"></data>
+        <title>{{x.name}}</title>
+        <script src="{%static 'js/jquery-ajax.js'%}"></script>
+        <script src="{%static 'js/ajaxsimpler.js'%}"></script>
+    </head>
+    <body>
+        <br>
+        <br>
+        <div class="container">
+            <div class="row">
+                {% for x,q in products %}
+                    <div class="col-4">
+                        <div class="card" style="width: 18rem;">
+                            <div class="card-body">
+                                <div style="display:flex; justify-content:space-between;">
+                                    <a href="{{x.get_absolute_url}}"><h3>{{x.product_name}}</h3></a>
+                                    <button type="button" class="cart_remove" data-id="{{x.id}}">
+                                        <img src="https://kontakt.az/wp-content/themes/kontakt7/ktn-assets/assets/bin.png" alt="" class="cart_remove" data-id="{{x.id}}">
+                                    </button>
+                                </div>
+                                <h4>{{x.product_price}}</h4>
+                                {%if x.product_discount_price%}
+                                    <h4>{{x.product_discount_price}}</h4>
+                                {%endif%}
+                                <div class="">
+                                    <input type="number" class="quantity-inputs" value="{{q}}" min="1" data-id="{{x.id}}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <h2>{{total}}</h2>
+            <a href="{%url 'confirm_cart'  %}" class="btn btn-primary">Confirm</a>
+        </div>
+
+        <script>
+        var ajx = window.AjaxSimpler.create()
+        ajx.csrftoken = 'csrftoken'
+        document.querySelectorAll('.quantity-inputs').forEach(qi=>{
+            qi.addEventListener('change',e=>{
+                let id = qi.getAttribute('data-id')
+                let quantity = qi.value
+                // localhost:8000/card/change-quantity/1/2
+                let routeLink = document.getElementById('change_quantity_route').getAttribute('value')
+                routeLink = routeLink.replace('_id_',id).replace('_qyt_',quantity)
+                ajx.POST(routeLink).then((e)=>{
+                    console.log("CHANGED!!!")
+                })
+            })
+        })
+        </script>
+
+        <script>
+        $(document).ready(function(){
+            $('.cart_remove').on('click', function(e){
+                e.preventDefault()
+                id = $(this).attr('data-id')
+                data = {
+                    id:id
+                }
+                $.ajax({
+                    headers: {"X-CSRFToken":getCookie("csrftoken")},
+                    type: "POST",
+                    url: '{% url 'cart_remove' %}',
+                    data:data,
+                    success: function(data){
+                        location.href = '{% url "index" %}';
+                    }
+                })
+            })
+        })
+        </script>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW" crossorigin="anonymous"></script>
+        
+    </body>
+</html>
