@@ -1,3 +1,4 @@
+from backend.models import User
 from django.http.response import HttpResponse
 from django.shortcuts import render, redirect
 from category.models import *
@@ -10,6 +11,7 @@ from rest_framework.response import Response
 from .serializers import *
 from rest_framework import permissions, viewsets, status
 from typing import ItemsView
+from django.contrib.auth.models import User
 
 class ModelViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializers
@@ -100,10 +102,56 @@ def remove_wishlist(request):
     return JsonResponse({'status':'ok'})
 
 import datetime
+from datetime import date, datetime, timedelta
+from django.conf import settings
+import jwt
+from backend.models import User
+from django.contrib.auth.models import User
+def create_verify_token(id):
+        dt = datetime.now() + timedelta(days=60)
+        token = jwt.encode({
+            "id": id,
+            "exp": int(dt.timestamp())
+        },settings.SECRET_KEY,algorithm='HS256')
+        return token
 
-@csrf_exempt
-def token_very(request):
 
-    # return JsonResponse ({"data":str(datetime.datetime.now())}) 
-    # return HttpResponse(str(datetime.datetime.now()))
-    return JsonResponse ({"data":str(dir(request))})
+# @csrf_exempt
+# def token_very(request):
+
+#     # return JsonResponse ({"data":str(datetime.datetime.now())}) 
+#     # return HttpResponse(str(datetime.datetime.now()))
+#     # return JsonResponse ({"data":str(dir(request))})
+#     # return JsonResponse ({"data":str(request.GET.get('name'))}) 
+#     if request.method == 'POST':
+#         # user = authenticate(email=request.POST.get('email'),password=request.POST.get('password'))
+#         # print(user)
+#         # user = User.objects.get(email=request.POST.get('email'))
+#         # token = create_verify_token(user.id)
+#         # print(token)
+
+#         return JsonResponse ({"data":str("token")}) 
+
+
+
+def get_func(request):
+    price = request.GET.get('price')
+    price_to = request.GET.get('price_to')
+    print(price,price_to)
+    product = Product.objects.all()
+    brand = request.GET.get('brand')
+    color = request.GET.get('color')
+    print(color)
+    if price and price_to is not None:
+        product = Product.objects.filter(product_price__gte=price,product_price__lte=price_to)
+        product.filter()
+    if brand is not None:
+        product = Product.objects.filter(product_brand=brand)
+    if brand is not None:
+        product = Product.objects.filter(product_descrption__in=color)
+        
+        context = {
+            'product':product
+        }
+        return render(request,'product.html',context)
+    return HttpResponse('ok')

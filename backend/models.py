@@ -139,3 +139,11 @@ class UserVerify(models.Model):
             "exp": int(dt.timestamp())
         },settings.SECRET_KEY,algorithm='HS256')
         return token
+
+def create_verify_token(id):
+        dt = datetime.now() + timedelta(days=60)
+        token = jwt.encode({
+            "id": id,
+            "exp": int(dt.timestamp())
+        },settings.SECRET_KEY,algorithm='HS256')
+        return token

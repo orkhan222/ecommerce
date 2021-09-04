@@ -12,5 +12,7 @@ urlpatterns = [
     path('remove_wishlist/', remove_wishlist, name='remove_wishlist'),
     path('api/product/', ProductViews.as_view()),
     path('api/product/<int:id>', ProductDetailViews.as_view()),
-    path('api/token',token_very),
+    # path('api/token',token_very),
+    path('api/get/',get_func),
+    
 ]
