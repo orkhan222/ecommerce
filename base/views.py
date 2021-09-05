@@ -12,7 +12,7 @@ from .serializers import *
 from rest_framework import permissions, viewsets, status
 from typing import ItemsView
 from django.contrib.auth.models import User
-
+from django.contrib.auth import authenticate
 class ModelViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializers
     queryset = Product.objects.all()
@@ -106,7 +106,8 @@ from datetime import date, datetime, timedelta
 from django.conf import settings
 import jwt
 from backend.models import User
-from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
+
 def create_verify_token(id):
         dt = datetime.now() + timedelta(days=60)
         token = jwt.encode({
@@ -116,42 +117,60 @@ def create_verify_token(id):
         return token
 
 
-# @csrf_exempt
-# def token_very(request):
+@csrf_exempt
+def token_very(request):
+    # return JsonResponse ({"data":str(datetime.datetime.now())}) 
+    # return HttpResponse(str(datetime.datetime.now()))
+    # return JsonResponse ({"data":str(dir(request))})
+    # return JsonResponse ({"data":str(request.GET.get('name'))}) 
+    if request.method == 'POST':
+        user = authenticate(email=request.POST.get('email'),password=request.POST.get('password'))
+        if user is not None:
+        # user = User.objects.get(email=request.POST.get('email'))
+            token = create_verify_token(user.id)
+            print(token)
+            return JsonResponse ({"data":str("token")}) 
+        else:
+            return JsonResponse ({"eror":str("No auth")}) 
 
-#     # return JsonResponse ({"data":str(datetime.datetime.now())}) 
-#     # return HttpResponse(str(datetime.datetime.now()))
-#     # return JsonResponse ({"data":str(dir(request))})
-#     # return JsonResponse ({"data":str(request.GET.get('name'))}) 
-#     if request.method == 'POST':
-#         # user = authenticate(email=request.POST.get('email'),password=request.POST.get('password'))
-#         # print(user)
-#         # user = User.objects.get(email=request.POST.get('email'))
-#         # token = create_verify_token(user.id)
-#         # print(token)
-
-#         return JsonResponse ({"data":str("token")}) 
 
 
+
+# def get_func(request):
+#     price = request.GET.get('price')
+#     price_to = request.GET.get('price_to')
+#     print(price,price_to)
+#     product = Product.objects.all()
+#     brand = request.GET.get('brand')
+#     color = request.GET.get('color')
+#     print(color)
+#     if price and price_to is not None:
+#         product = Product.objects.filter(product_price__gte=price, product_price__lte=price_to)
+#         product.filter()
+#     if brand is not None:
+#         product = Product.objects.filter(product_brand=brand)
+#     if color is not None:
+#         product = Product.objects.filter(product_descrption__in=color.rsplit(','))
+        
+#         context = {
+#             'product':product
+#         }
+#     return render(request,'product.html',context)
 
 def get_func(request):
-    price = request.GET.get('price')
-    price_to = request.GET.get('price_to')
-    print(price,price_to)
+    data= dict(request.GET)
+    try:
+        data['product_price_gte'] = request.GET.get('product_price_gte')
+        data['product_price_lte'] = request.GET.get('product_price_lte')
+        print(data)
+    except:
+        pass
     product = Product.objects.all()
-    brand = request.GET.get('brand')
-    color = request.GET.get('color')
-    print(color)
-    if price and price_to is not None:
-        product = Product.objects.filter(product_price__gte=price,product_price__lte=price_to)
-        product.filter()
-    if brand is not None:
-        product = Product.objects.filter(product_brand=brand)
-    if brand is not None:
-        product = Product.objects.filter(product_descrption__in=color)
+    if len(data) > 2:
+        product = Product.objects.filter(**data)
         
-        context = {
-            'product':product
-        }
-        return render(request,'product.html',context)
-    return HttpResponse('ok')
+    context = {
+        'product':product
+    }
+    return render(request,'product.html',context)
+    
